@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,10 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 @OpenAPIDefinition(info = @Info(title = "Awesome little todo application to demonstrate Docker"))
 @RestController
 @RequestMapping("/todos")
-@Timed
 public class TodoEndpoint {
 
   private final TodoRepository repository;
+
+  private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
   @Autowired
   public TodoEndpoint(TodoRepository repository) {
@@ -40,7 +43,9 @@ public class TodoEndpoint {
 
   @Operation(description = "Get a list of all available todos")
   @RequestMapping(method = GET, produces = "application/json")
-  public List<Todo> findAll() {
+  public List<Todo> findAll() throws InterruptedException {
+    delay();
+    error();
     return repository.findAll();
   }
 
@@ -78,5 +83,17 @@ public class TodoEndpoint {
   @RequestMapping(method = DELETE)
   public void deleteByDone(@PathParam("done") boolean done) {
     repository.deleteByDone(done);
+  }
+
+  private void delay() throws InterruptedException {
+    if (random.nextInt(10) == 1) {
+      Thread.sleep(1000);
+    }
+  }
+
+  private void error() {
+    if (random.nextInt(10) == 9) {
+      throw new RuntimeException();
+    }
   }
 }
